@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SciDiagram-Bench Case Study</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --text: #1a1a1a;
+    --text-secondary: #666;
+    --border: #e5e5e5;
+    --border-light: #f0f0f0;
+    --accent: #2563eb;
+    --accent-light: #eff6ff;
+    --success: #16a34a;
+    --error: #dc2626;
+    --code-bg: #f8f9fa;
+    --card-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    --radius: 8px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Header */
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 0;
+  }
+  .header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+  .header h1 {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .header .subtitle {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  /* Nav tabs */
+  .nav-tabs {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .nav-tab {
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    cursor: pointer;
+    background: var(--bg);
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all 0.15s;
+  }
+  .nav-tab:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* Main */
+  .main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+
+  /* Case section */
+  .case-section {
+    margin-bottom: 48px;
+    scroll-margin-top: 120px;
+  }
+  .case-title {
+    font-size: 18px;
+    font-weight: 600;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--text);
+    margin-bottom: 24px;
+  }
+  .case-title .cat {
+    color: var(--accent);
+  }
+  .case-title .id {
+    font-weight: 400;
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-left: 8px;
+    font-family: monospace;
+  }
+
+  /* Task card */
+  .task-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .task-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: var(--code-bg);
+    border-bottom: 1px solid var(--border);
+  }
+  .task-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .task-badge.d2c { background: #dbeafe; color: #1e40af; }
+  .task-badge.de  { background: #fef3c7; color: #92400e; }
+  .task-badge.du  { background: #d1fae5; color: #065f46; }
+  .task-type-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+  .task-body {
+    padding: 16px;
+  }
+
+  /* Question summary */
+  .question-row {
+    margin-bottom: 16px;
+  }
+  .question-label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+  }
+  .question-text {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .gt-answer-inline {
+    margin-top: 8px;
+    font-size: 14px;
+  }
+  .gt-answer-inline .label {
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+  .gt-answer-inline code {
+    background: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+  }
+
+  /* Images grid */
+  .images-grid {
+    display: grid;
+    gap: 12px;
+    margin: 16px 0;
+  }
+  .images-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+  .images-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .img-cell {
+    text-align: center;
+  }
+  .img-cell .img-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+  }
+  .img-cell .img-wrapper {
+    width: 100%;
+    height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border-light);
+    border-radius: 4px;
+    background: #fafafa;
+    overflow: hidden;
+  }
+  .img-cell img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+  .img-cell .img-placeholder {
+    width: 100%;
+    height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fafafa;
+    border: 1px dashed #ddd;
+    border-radius: 4px;
+    color: #bbb;
+    font-size: 12px;
+  }
+
+  /* Metrics table */
+  .metrics-section {
+    margin-top: 16px;
+  }
+  .metrics-section .section-label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+  .metrics-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .metrics-table th, .metrics-table td {
+    padding: 6px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .metrics-table th {
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .metrics-table td.metric-name {
+    font-family: monospace;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .metrics-table td.best {
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  /* DU answer table */
+  .du-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-top: 12px;
+  }
+  .du-table th, .du-table td {
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .du-table th {
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 12px;
+  }
+
+  /* Collapsible */
+  .collapsible {
+    margin-top: 8px;
+  }
+  .collapsible-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--accent);
+    cursor: pointer;
+    padding: 4px 0;
+    border: none;
+    background: none;
+    user-select: none;
+  }
+  .collapsible-toggle:hover {
+    text-decoration: underline;
+  }
+  .collapsible-toggle .arrow {
+    display: inline-block;
+    transition: transform 0.15s;
+    font-size: 10px;
+  }
+  .collapsible-toggle.open .arrow {
+    transform: rotate(90deg);
+  }
+  .collapsible-content {
+    display: none;
+    margin-top: 8px;
+    position: relative;
+  }
+  .collapsible-content.open {
+    display: block;
+  }
+
+  /* Copy button */
+  .copy-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 12px;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg);
+    color: var(--text-secondary);
+    cursor: pointer;
+    z-index: 2;
+    transition: all 0.15s;
+  }
+  .copy-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .copy-btn.copied {
+    border-color: var(--success);
+    color: var(--success);
+  }
+
+  /* Code block */
+  .code-block {
+    position: relative;
+    background: var(--code-bg);
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .code-block pre {
+    padding: 12px 16px;
+    padding-right: 80px;
+    font-size: 12px;
+    line-height: 1.5;
+    font-family: "SF Mono", Monaco, Menlo, Consolas, monospace;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  /* Collapsible row for models */
+  .model-toggles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    margin-top: 12px;
+  }
+
+  /* Extraction failed label */
+  .extraction-failed {
+    font-size: 11px;
+    color: var(--error);
+    font-weight: 500;
+    margin-left: 4px;
+  }
+
+  /* Download button */
+  .download-btn {
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    cursor: pointer;
+    background: var(--bg);
+    color: var(--text-secondary);
+    transition: all 0.15s;
+  }
+  .download-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .download-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .images-grid.cols-4 { grid-template-columns: repeat(2, 1fr); }
+    .images-grid.cols-3 { grid-template-columns: repeat(1, 1fr); }
+    .header-inner, .main { padding: 0 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <h1>SciDiagram-Bench Case Study</h1>
+    <div class="subtitle" id="subtitle"></div>
+    <div style="display:flex;align-items:center;gap:12px;margin-top:12px;flex-wrap:wrap;">
+      <div class="nav-tabs" id="nav-tabs"></div>
+      <button class="download-btn" id="download-btn" onclick="downloadAll()">Download All (ZIP)</button>
+    </div>
+  </div>
+</div>
+
+<div class="main" id="main"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script>
+let DATA = null;
+
+async function loadData() {
+  const resp = await fetch('data.json');
+  DATA = await resp.json();
+  render();
+}
+
+function render() {
+  const { metadata, cases } = DATA;
+  const models = metadata.models;
+
+  // Subtitle
+  const names = models.map(m => metadata.model_display[m] || m);
+  document.getElementById('subtitle').textContent = names.join('  ·  ');
+
+  // Nav tabs
+  const nav = document.getElementById('nav-tabs');
+  nav.innerHTML = '';
+  for (const [cid, c] of Object.entries(cases)) {
+    const a = document.createElement('a');
+    a.className = 'nav-tab';
+    a.href = '#' + cid;
+    a.textContent = c.category_display;
+    nav.appendChild(a);
+  }
+
+  // Main content
+  const main = document.getElementById('main');
+  main.innerHTML = '';
+
+  for (const [caseId, caseData] of Object.entries(cases)) {
+    const section = document.createElement('div');
+    section.className = 'case-section';
+    section.id = caseId;
+
+    section.innerHTML = `
+      <div class="case-title">
+        <span class="cat">${caseData.category_display}</span>
+        <span class="id">${caseId}</span>
+      </div>
+    `;
+
+    const tasks = caseData.tasks;
+    const taskOrder = Object.keys(tasks).sort((a, b) => {
+      const order = { d2c: 0, de_0: 1, de_1: 2, du_0: 3, du_1: 4 };
+      return (order[a] ?? 9) - (order[b] ?? 9);
+    });
+
+    for (const taskKey of taskOrder) {
+      const task = tasks[taskKey];
+      let card;
+      if (taskKey === 'd2c') {
+        card = renderCodeTask(taskKey, 'D2C', 'Diagram-to-Code', task, models, metadata);
+      } else if (taskKey.startsWith('de_')) {
+        const idx = taskKey.split('_')[1];
+        card = renderCodeTask(taskKey, 'DE', `Diagram Editing #${idx}`, task, models, metadata);
+      } else if (taskKey.startsWith('du_')) {
+        const idx = taskKey.split('_')[1];
+        card = renderDuTask(taskKey, idx, task, models, metadata);
+      }
+      if (card) section.appendChild(card);
+    }
+
+    main.appendChild(section);
+  }
+}
+
+function renderCodeTask(taskKey, badge, typeLabel, task, models, metadata) {
+  const card = el('div', 'task-card');
+  const badgeClass = badge.toLowerCase();
+  const metricKeys = badgeClass === 'de' ? metadata.de_metrics : metadata.d2c_metrics;
+
+  // Header
+  card.innerHTML = `
+    <div class="task-header">
+      <span class="task-badge ${badgeClass}">${badge}</span>
+      <span class="task-type-label">${typeLabel}</span>
+    </div>
+  `;
+
+  const body = el('div', 'task-body');
+
+  // Question summary
+  body.appendChild(questionRow(task.question_summary));
+
+  // Full question collapsible
+  if (task.question_full) {
+    body.appendChild(makeCollapsible('Full Question', task.question_full));
+  }
+
+  // Images: GT + 3 models
+  const grid = el('div', 'images-grid cols-4');
+  // GT
+  grid.appendChild(imgCell('Ground Truth', task.gt_image));
+  for (const m of models) {
+    const md = task.models[m] || {};
+    const displayName = metadata.model_display[m] || m;
+    grid.appendChild(imgCell(displayName, md.gen_image));
+  }
+  body.appendChild(grid);
+
+  // GT answer code collapsible
+  if (task.answer_code) {
+    body.appendChild(makeCollapsible('GT Answer Code', task.answer_code));
+  }
+
+  // Model code/raw output toggles
+  const toggles = el('div', 'model-toggles');
+  for (const m of models) {
+    const md = task.models[m] || {};
+    const displayName = metadata.model_display[m] || m;
+    if (md.extracted_code) {
+      toggles.appendChild(makeCollapsible(`${displayName} — Extracted Code`, md.extracted_code));
+    } else if (md.raw_output) {
+      const c = makeCollapsible(`${displayName} — Raw Output`, md.raw_output);
+      c.querySelector('.collapsible-toggle').insertAdjacentHTML(
+        'beforeend', '<span class="extraction-failed">(extraction failed)</span>'
+      );
+      toggles.appendChild(c);
+    }
+  }
+  body.appendChild(toggles);
+
+  // Metrics table
+  body.appendChild(metricsTable(task.models, metricKeys, models, metadata));
+
+  card.appendChild(body);
+  return card;
+}
+
+function renderDuTask(taskKey, idx, task, models, metadata) {
+  const card = el('div', 'task-card');
+
+  card.innerHTML = `
+    <div class="task-header">
+      <span class="task-badge du">DU</span>
+      <span class="task-type-label">Diagram Understanding #${idx}</span>
+    </div>
+  `;
+
+  const body = el('div', 'task-body');
+
+  // Question summary
+  body.appendChild(questionRow(task.question_summary));
+
+  // Full question collapsible
+  if (task.question_full) {
+    body.appendChild(makeCollapsible('Full Question', task.question_full));
+  }
+
+  // GT answer
+  const gtRow = el('div', 'gt-answer-inline');
+  gtRow.innerHTML = `<span class="label">GT Answer:</span> <code>${esc(task.gt_answer)}</code>`;
+  body.appendChild(gtRow);
+
+  // GT reasoning collapsible
+  if (task.answer_reasoning) {
+    body.appendChild(makeCollapsible('GT Answer Reasoning', task.answer_reasoning));
+  }
+
+  // Model answers table
+  const table = document.createElement('table');
+  table.className = 'du-table';
+  let rows = `<tr><th>Model</th><th>Extracted Answer</th><th>Score</th><th>Label</th></tr>`;
+  for (const m of models) {
+    const md = task.models[m] || {};
+    const displayName = metadata.model_display[m] || m;
+    const label = md.label === 'correct'
+      ? '<span style="color:var(--success)">&#10003; correct</span>'
+      : md.label === 'incorrect'
+      ? '<span style="color:var(--error)">&#10007; incorrect</span>'
+      : (md.label || '—');
+    const score = md.score != null ? md.score : '—';
+    const ans = md.extracted_answer != null ? md.extracted_answer : '—';
+    rows += `<tr>
+      <td>${esc(displayName)}</td>
+      <td><code>${esc(String(ans))}</code></td>
+      <td>${score}</td>
+      <td>${label}</td>
+    </tr>`;
+  }
+  table.innerHTML = rows;
+  body.appendChild(table);
+
+  // Model raw output toggles
+  const toggles = el('div', 'model-toggles');
+  for (const m of models) {
+    const md = task.models[m] || {};
+    const displayName = metadata.model_display[m] || m;
+    if (md.raw_output) {
+      toggles.appendChild(makeCollapsible(`${displayName} — Raw Output`, md.raw_output));
+    }
+  }
+  body.appendChild(toggles);
+
+  card.appendChild(body);
+  return card;
+}
+
+/* ===== Helpers ===== */
+
+function el(tag, cls) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  return e;
+}
+
+function esc(s) {
+  if (!s) return '';
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function questionRow(text) {
+  const row = el('div', 'question-row');
+  row.innerHTML = `
+    <div class="question-label">Question</div>
+    <div class="question-text">${esc(text)}</div>
+  `;
+  return row;
+}
+
+function imgCell(label, src) {
+  const cell = el('div', 'img-cell');
+  cell.innerHTML = `<div class="img-label">${esc(label)}</div>`;
+  if (src) {
+    const wrapper = el('div', 'img-wrapper');
+    const img = document.createElement('img');
+    img.src = src;
+    img.alt = label;
+    img.loading = 'lazy';
+    wrapper.appendChild(img);
+    cell.appendChild(wrapper);
+  } else {
+    cell.innerHTML += `<div class="img-placeholder">Compile Failed</div>`;
+  }
+  return cell;
+}
+
+function makeCollapsible(label, content) {
+  const wrapper = el('div', 'collapsible');
+
+  const toggle = el('button', 'collapsible-toggle');
+  toggle.innerHTML = `<span class="arrow">&#9654;</span> ${esc(label)}`;
+
+  const contentDiv = el('div', 'collapsible-content');
+  const codeBlock = el('div', 'code-block');
+
+  const copyBtn = document.createElement('button');
+  copyBtn.className = 'copy-btn';
+  copyBtn.textContent = 'Copy';
+  copyBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(content).then(() => {
+      copyBtn.textContent = 'Copied!';
+      copyBtn.classList.add('copied');
+      setTimeout(() => {
+        copyBtn.textContent = 'Copy';
+        copyBtn.classList.remove('copied');
+      }, 1500);
+    }).catch(() => {
+      // Fallback for non-HTTPS
+      const ta = document.createElement('textarea');
+      ta.value = content;
+      ta.style.cssText = 'position:fixed;left:-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      copyBtn.textContent = 'Copied!';
+      copyBtn.classList.add('copied');
+      setTimeout(() => {
+        copyBtn.textContent = 'Copy';
+        copyBtn.classList.remove('copied');
+      }, 1500);
+    });
+  });
+
+  const pre = document.createElement('pre');
+  pre.textContent = content;
+
+  codeBlock.appendChild(copyBtn);
+  codeBlock.appendChild(pre);
+  contentDiv.appendChild(codeBlock);
+
+  toggle.addEventListener('click', () => {
+    toggle.classList.toggle('open');
+    contentDiv.classList.toggle('open');
+  });
+
+  wrapper.appendChild(toggle);
+  wrapper.appendChild(contentDiv);
+  return wrapper;
+}
+
+function metricsTable(modelsData, metricKeys, models, metadata) {
+  const section = el('div', 'metrics-section');
+  section.innerHTML = `<div class="section-label">Metrics</div>`;
+
+  const table = document.createElement('table');
+  table.className = 'metrics-table';
+
+  // Header
+  let headerRow = '<tr><th>Metric</th>';
+  for (const m of models) {
+    headerRow += `<th>${esc(metadata.model_display[m] || m)}</th>`;
+  }
+  headerRow += '</tr>';
+
+  // Body rows
+  let bodyRows = '';
+  for (const key of metricKeys) {
+    const vals = models.map(m => {
+      const md = modelsData[m] || {};
+      const metrics = md.metrics || {};
+      return metrics[key];
+    });
+
+    // Metric directions based on paper definitions:
+    // ↓ lower is better: lpips (perceptual distance), fid (distribution distance)
+    // ↑ higher is better: all F1 variants, crystal_bleu, ssim, clip_score, du_score
+    // boolean (no ranking): compile_success
+    const LOWER_IS_BETTER = new Set(['lpips', 'fid']);
+    const isBoolean = key === 'compile_success';
+    const numVals = vals.map(v => (typeof v === 'number' ? v : null));
+    let bestIdx = -1;
+    if (!isBoolean && numVals.some(v => v !== null)) {
+      const validNums = numVals.filter(v => v !== null);
+      if (LOWER_IS_BETTER.has(key)) {
+        const best = Math.min(...validNums);
+        bestIdx = numVals.indexOf(best);
+      } else {
+        const best = Math.max(...validNums);
+        bestIdx = numVals.indexOf(best);
+      }
+    }
+
+    bodyRows += `<tr><td class="metric-name">${key}</td>`;
+    vals.forEach((v, i) => {
+      let formatted;
+      if (v === null || v === undefined) {
+        formatted = '—';
+      } else if (isBoolean) {
+        formatted = v ? '<span style="color:var(--success)">&#10003;</span>'
+                      : '<span style="color:var(--error)">&#10007;</span>';
+      } else if (typeof v === 'number') {
+        formatted = v.toFixed(4);
+      } else {
+        formatted = String(v);
+      }
+      const cls = (i === bestIdx && typeof v === 'number') ? ' class="best"' : '';
+      bodyRows += `<td${cls}>${formatted}</td>`;
+    });
+    bodyRows += '</tr>';
+  }
+
+  table.innerHTML = headerRow + bodyRows;
+  section.appendChild(table);
+  return section;
+}
+
+// Download all referenced files as ZIP
+async function downloadAll() {
+  const btn = document.getElementById('download-btn');
+  btn.disabled = true;
+  btn.textContent = 'Packaging...';
+
+  try {
+    const zip = new JSZip();
+
+    // Add data.json
+    zip.file('data.json', JSON.stringify(DATA, null, 2));
+
+    // Collect all image paths from DATA
+    const imgPaths = new Set();
+    for (const [, caseData] of Object.entries(DATA.cases)) {
+      for (const [, task] of Object.entries(caseData.tasks)) {
+        if (task.gt_image) imgPaths.add(task.gt_image);
+        if (task.models) {
+          for (const [, md] of Object.entries(task.models)) {
+            if (md.gen_image) imgPaths.add(md.gen_image);
+          }
+        }
+      }
+    }
+
+    // Fetch and add each image
+    let done = 0;
+    const total = imgPaths.size;
+    for (const p of imgPaths) {
+      try {
+        const resp = await fetch(p);
+        if (resp.ok) {
+          const blob = await resp.blob();
+          zip.file(p, blob);
+        }
+      } catch (e) { /* skip failed */ }
+      done++;
+      btn.textContent = `Packaging... ${done}/${total}`;
+    }
+
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'case-study-viewer.zip';
+    a.click();
+    URL.revokeObjectURL(url);
+
+    btn.textContent = 'Download All (ZIP)';
+  } catch (e) {
+    btn.textContent = 'Download failed';
+    console.error(e);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// Init
+loadData();
+</script>
+</body>
+</html>
