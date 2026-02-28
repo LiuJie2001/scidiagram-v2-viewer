@@ -379,16 +379,16 @@
     padding: 6px 14px;
     font-size: 13px;
     font-weight: 500;
-    border: 1px solid var(--border);
+    border: 1px solid var(--success);
     border-radius: 20px;
     cursor: pointer;
-    background: var(--bg);
-    color: var(--text-secondary);
+    background: var(--success);
+    color: #fff;
     transition: all 0.15s;
   }
   .download-btn:hover {
-    border-color: var(--accent);
-    color: var(--accent);
+    background: #15803d;
+    border-color: #15803d;
   }
   .download-btn:disabled {
     opacity: 0.5;
@@ -757,7 +757,15 @@ function metricsTable(modelsData, metricKeys, models, metadata) {
       }
     }
 
-    bodyRows += `<tr><td class="metric-name">${key}</td>`;
+    let direction = '';
+    if (isBoolean) {
+      direction = '';
+    } else if (LOWER_IS_BETTER.has(key)) {
+      direction = ' <span style="color:var(--text-secondary);font-size:11px" title="lower is better">\u2193</span>';
+    } else {
+      direction = ' <span style="color:var(--text-secondary);font-size:11px" title="higher is better">\u2191</span>';
+    }
+    bodyRows += `<tr><td class="metric-name">${key}${direction}</td>`;
     vals.forEach((v, i) => {
       let formatted;
       if (v === null || v === undefined) {
